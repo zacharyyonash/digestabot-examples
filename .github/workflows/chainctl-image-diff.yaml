@@ -32,7 +32,7 @@ jobs:
         identity: "326bcde5903252f3ae2fe01c691b5a50f7046b5d/10275f9d35604b8e"
 
     # Install grype. It's required by chainctl image diff.
-    - uses: anchore/scan-action/download-grype@2a3918e906deb404b9630a81a71baaa5798d6f75 # v6.1.0
+    - uses: anchore/scan-action/download-grype@dc6246fcaf83ae86fcc6010b9824c30d7320729e # v6.1.0
       id: download_grype
 
     # Run digestabot. Don't create the PR.
