@@ -32,6 +32,7 @@ jobs:
         title-for-pr: 'Update Digests (+ `grype`)'
         commit-message: 'Update Digests (+ `grype`)'
         branch-for-pr: grype-scan
+        labels-for-pr: ''
 
     # Iterate over the updates described by the JSON output of digestabot. Run
     # grype.
