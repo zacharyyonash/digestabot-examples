@@ -1,0 +1,29 @@
+name: Digestabot
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 0 * * 0"
+
+jobs:
+  digestabot:
+    name: Digestabot
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+
+    steps:
+    - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+
+    # Run digestabot
+    - uses: chainguard-dev/digestabot@43222237fd8a07dc41a06ca13e931c95ce2cedac # v1.2.2
+      id: digestabot
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+        title-for-pr: 'Update Digests'
+        commit-message: 'Update Digests'
+        branch-for-pr: digestabot
+        labels-for-pr: ''

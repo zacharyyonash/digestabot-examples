@@ -7,6 +7,10 @@ You can see the workflows in [`./.github/workflows`](.github/workflows).
 
 The workflows create Pull Requests in this repository.
 
+## Digestabot
+
+Demonstrates the straightforward usage of `digestabot`.
+
 ## Chainctl Image Diff
 
 Runs `chainctl image diff` on the updates made by `digestabot`.
