@@ -42,6 +42,9 @@ jobs:
     - uses: anchore/scan-action/download-grype@be7a22da4f22dde446c4c4c099887ff5b256526c # v6.1.0
       id: download_grype
 
+    # Install cosign. We'll use this to verify image signatures.
+    - uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
+
     # Run digestabot. Don't create the PR.
     - uses: chainguard-dev/digestabot@43222237fd8a07dc41a06ca13e931c95ce2cedac # v1.2.2
       id: digestabot
@@ -67,6 +70,10 @@ jobs:
         # Include the grype binary in the path
         export PATH="$(dirname '${{steps.download_grype.outputs.cmd}}'):${PATH}"
 
+        # Images will be signed by either the CATALOG_SYNCER or APKO_BUILDER identity in your organization.
+        catalog_syncer=$(chainctl iam account-associations describe "${org_name}" -o json | jq -r '.[].chainguard.service_bindings.CATALOG_SYNCER')
+        apko_builder=$(chainctl iam account-associations describe "${org_name}" -o json | jq -r '.[].chainguard.service_bindings.APKO_BUILDER')
+
         while read -r item; do
            from_image=$(jq -r '.image + "@" + .digest' <<<$item)
            to_image=$(jq -r '.image + "@" + .updated_digest' <<<$item)
@@ -82,27 +89,24 @@ jobs:
              continue
            fi
 
-           # If the image isn't hosted in cgr.dev, use the vendor annotation to
-           # identify whether an image is a Chainguard one. We can't run
-           # `chainctl images diff` on non-Chainguard images.
-           #
-           # The `chainctl images diff` command below will verify
-           # the signatures when it fetches the SBOM, so we don't need to
-           # use signatures here for a verifiable proof that the image came from
-           # Chainguard.
-           if [[ ! "${from_image}" =~ ^cgr.dev/.+$ ]]; then
-             from_vendor=$(crane manifest "${from_image}" | jq -r '.annotations["org.opencontainers.image.vendor"] // ""')
-             if [[ "${from_vendor}" != "Chainguard" ]]; then
-               echo "Skipping ${from_image} because it isn't a Chainguard image"
+           # Use the signatures to figure out if they are Chainguard images. We
+           # can't run `chainctl images diff` on non-Chainguard images.
+           signed=0
+           for img in "${from_image}" "${to_image}"; do
+             echo "Verifying that ${img} is a Chainguard image with cosign"
+             if cosign verify --certificate-oidc-issuer=https://issuer.enforce.dev --certificate-identity-regexp='^https://issuer.enforce.dev/('"${catalog_syncer}"'|'"${apko_builder}"')$' "${img}" &>/dev/null; then
+               signed=$((signed+1))
                continue
              fi
-           fi
-           if [[ ! "${to_image}" =~ ^cgr.dev/.+$ ]]; then
-             to_vendor=$(crane manifest "${to_image}" | jq -r '.annotations["org.opencontainers.image.vendor"] // ""')
-             if [[ "${to_vendor}" != "Chainguard" ]]; then
-               echo "Skipping ${to_image} because it isn't a Chainguard image"
+             if cosign verify --certificate-oidc-issuer=https://token.actions.githubusercontent.com --certificate-identity-regexp='^https://github.com/chainguard-images/images(-private)?/.github/workflows/release.yaml@refs/heads/main$' "${img}" &>/dev/null; then
+               signed=$((signed+1))
                continue
              fi
+             echo "Skipping because ${img} is not signed by Chainguard"
+             break
+           done
+           if [[ ${signed} -lt 2 ]]; then
+             continue
            fi
 
            echo "Processing from=${from_image} to=${to_image}"
