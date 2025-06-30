@@ -8,6 +8,17 @@ on:
 permissions:
   contents: read
 
+env:
+  # Images will be signed by either the CATALOG_SYNCER or APKO_BUILDER identity in your organization.
+  #
+  # Use these commands to find the ids of the identities in your org:
+  #
+  #   chainctl iam account-associations describe YOUR_ORG -o json | jq -r '.[].chainguard.service_bindings.CATALOG_SYNCER'
+  #   chainctl iam account-associations describe YOUR_ORG -o json | jq -r '.[].chainguard.service_bindings.APKO_BUILDER'
+  #
+  catalog_syncer: 720909c9f5279097d847ad02a2f24ba8f59de36a/6cfb09d006f29ece
+  apko_builder: 720909c9f5279097d847ad02a2f24ba8f59de36a/a9e14125ba29b4f8
+
 jobs:
   chainctl-image-diff:
     name: Chainctl Image Diff
@@ -70,10 +81,6 @@ jobs:
         # Include the grype binary in the path
         export PATH="$(dirname '${{steps.download_grype.outputs.cmd}}'):${PATH}"
 
-        # Images will be signed by either the CATALOG_SYNCER or APKO_BUILDER identity in your organization.
-        catalog_syncer=$(chainctl iam account-associations describe "${org_name}" -o json | jq -r '.[].chainguard.service_bindings.CATALOG_SYNCER')
-        apko_builder=$(chainctl iam account-associations describe "${org_name}" -o json | jq -r '.[].chainguard.service_bindings.APKO_BUILDER')
-
         while read -r item; do
            from_image=$(jq -r '.image + "@" + .digest' <<<$item)
            to_image=$(jq -r '.image + "@" + .updated_digest' <<<$item)
@@ -94,7 +101,7 @@ jobs:
            signed=0
            for img in "${from_image}" "${to_image}"; do
              echo "Verifying that ${img} is a Chainguard image with cosign"
-             if cosign verify --certificate-oidc-issuer=https://issuer.enforce.dev --certificate-identity-regexp='^https://issuer.enforce.dev/('"${catalog_syncer}"'|'"${apko_builder}"')$' "${img}" &>/dev/null; then
+             if cosign verify --certificate-oidc-issuer=https://issuer.enforce.dev --certificate-identity-regexp='^https://issuer.enforce.dev/(${{env.catalog_syncer}}|${{env.apko_builder}})$' "${img}" &>/dev/null; then
                signed=$((signed+1))
                continue
              fi
