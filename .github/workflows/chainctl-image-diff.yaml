@@ -54,7 +54,7 @@ jobs:
       id: download_grype
 
     # Install cosign. We'll use this to verify image signatures.
-    - uses: sigstore/cosign-installer@3454372f43399081ed03b604cb2d021dabca52bb # v3.8.2
+    - uses: sigstore/cosign-installer@398d4b0eeef1380460a10c8013a76f728fb906ac # v3.9.1
 
     # Run digestabot. Don't create the PR.
     - uses: chainguard-dev/digestabot@43222237fd8a07dc41a06ca13e931c95ce2cedac # v1.2.2
