@@ -50,7 +50,7 @@ jobs:
         identity: "326bcde5903252f3ae2fe01c691b5a50f7046b5d/10275f9d35604b8e"
 
     # Install grype. It's required by chainctl image diff.
-    - uses: anchore/scan-action/download-grype@be7a22da4f22dde446c4c4c099887ff5b256526c # v6.1.0
+    - uses: anchore/scan-action/download-grype@16910ac423301c6d30554b83a7f71ac6ff4a51f3 # v6.1.0
       id: download_grype
 
     # Install cosign. We'll use this to verify image signatures.
