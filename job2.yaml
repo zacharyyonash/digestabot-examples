@@ -1,0 +1,11 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  namespace: default
+  name: myjob
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      initContainers:
+      - image: cgr.dev/zachary.yonash/imagemagick:7@sha256:b338030ce95d19102f018e9898d5770ce2ebb2e54bd69baeccc88c9dc3319dc2
