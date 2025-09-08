@@ -1,4 +1,4 @@
-name: Digestabot
+name: Digestabot Authenticated
 
 on:
   workflow_dispatch:
@@ -25,7 +25,7 @@ jobs:
         egress-policy: audit
 
     - uses: chainguard-dev/setup-chainctl
-      with: 
+      with:
         identity: ${{ secrets.CHAINCTL_IDENTITY }} 
 
     - uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8 # v5.0.0
