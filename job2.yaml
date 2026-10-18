@@ -8,4 +8,4 @@ spec:
     spec:
       restartPolicy: Never
       initContainers:
-      - image: cgr.dev/zachary.yonash/imagemagick:7@sha256:aaf545a02368470a65f5bb05257319e4014d684d3f788182bc63836d7b33787f
+      - image: cgr.dev/zachary.yonash/imagemagick:7@sha256:5e8f3af81f9de3a1574a2891b65f7173315d6be141b47a988913d71e4c46d843
